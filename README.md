@@ -1,5 +1,148 @@
-<!-- Banner Image -->
+<!-- Banner Image -->PetTransit_App
+│ App.js
+│ package.json
+│ ...
+├── components
+│     ├── AppointmentCard.js
+│     └── PetUpdateCard.js
+├── screens
+│     ├── HomeScreen.js
+│     ├── CreateAppointment.js
+│     ├── ConfirmPickup.js
+│     ├── TermsScreen.js
+│     └── PaymentScreen.js
+├── data
+│     └── TermsText.js
+└── services
+      └── firebase.js
+// services/firebase.js
+import { initializeApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
+const firebaseConfig = {
+  apiKey: "YOUR KEY",
+  authDomain: "YOUR AUTH DOMAIN",
+  projectId: "YOUR PROJECT ID",
+  storageBucket: "YOUR BUCKET",
+  messagingSenderId: "YOUR ID",
+  appId: "YOUR APP ID"
+};
+
+const app = initializeApp(firebaseConfig);
+
+export const db = getFirestore(app);
+export const storage = getStorage(app);
+
+import { View, Text, Button } from "react-native";
+
+export default function HomeScreen({ navigation }) {
+  return (
+    <View style={{ padding: 20 }}>
+      <Text style={{ fontSize: 28, fontWeight: "bold" }}>Pet Transit Service</Text>
+      <Text>Your trusted pet transportation.</Text>
+
+      <Button 
+        title="Create Appointment" 
+        onPress={() => navigation.navigate("CreateAppointment")} 
+      />
+      <Button 
+        title="Terms & Agreement" 
+        onPress={() => navigation.navigate("Terms")} 
+      />
+    </View>
+  );
+}import { useState } from "react";
+import { View, Text, TextInput, Button } from "react-native";
+import { db } from "../services/firebase";
+import { addDoc, collection } from "firebase/firestore";
+
+export default function CreateAppointment({ navigation }) {
+  const [name, setName] = useState("");
+  const [pet, setPet] = useState("");
+  const [pickupTime, setPickupTime] = useState("");
+  const [nailTrim, setNailTrim] = useState(false);
+
+  const createAppt = async () => {
+    await addDoc(collection(db, "appointments"), {
+      name,
+      pet,
+      pickupTime,
+      nailTrim,
+      status: "pending"
+    });
+    navigation.navigate("Home");
+  };
+
+  return (
+    <View style={{ padding: 20 }}>
+      <Text>Create a Pet Transit Appointment</Text>
+
+      <TextInput placeholder="Your Name" onChangeText={setName} />
+      <TextInput placeholder="Pet Name" onChangeText={setPet} />
+      <TextInput placeholder="Preferred Pickup Time" onChangeText={setPickupTime} />
+
+      <Button title="Submit Appointment" onPress={createAppt} />
+    </View>
+  );
+}import { View, Text, Button } from "react-native";
+import { db } from "../services/firebase";
+import { updateDoc, doc } from "firebase/firestore";
+
+export default function ConfirmPickup({ route }) {
+  const { appt } = route.params;
+
+  const confirm = async () => {
+    await updateDoc(doc(db, "appointments", appt.id), {
+      status: "confirmed"
+    });
+  };
+
+  return (
+    <View style={{ padding: 20 }}>
+      <Text>Confirm Appointment</Text>
+      <Text>{appt.name}</Text>
+      <Text>{appt.pet}</Text>
+      <Text>{appt.pickupTime}</Text>
+
+      <Button title="Confirm Pickup" onPress={confirm} />
+    </View>
+  );
+}import * as ImagePicker from 'expo-image-picker';
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { storage } from "../services/firebase";
+
+const pickImage = async () => {
+  let result = await ImagePicker.launchCameraAsync();
+
+  if (!result.canceled) {
+    const response = await fetch(result.assets[0].uri);
+    const blob = await response.blob();
+
+    const storageRef = ref(storage, `updates/${Date.now()}.jpg`);
+    await uploadBytes(storageRef, blob);
+    const url = await getDownloadURL(storageRef);
+
+    // store URL in Firestore...
+  }
+};npm install @stripe/stripe-react-native
+export const terms = `
+By using PetTransit, I acknowledge:
+- I understand that PetTransit is not liable for injury, illness, escape, or accidents.
+- I confirm that my pet is healthy and safe for transit.
+- I authorize PetTransit to transport my pet.
+- I release PetTransit from all liability related to transportation.
+`;import { ScrollView, Text } from "react-native";
+import { terms } from "../data/TermsText";
+
+export default function TermsScreen() {
+  return (
+    <ScrollView style={{ padding: 20 }}>
+      <Text style={{ fontSize: 22, fontWeight: "bold" }}>Terms & Agreement</Text>
+      <Text>{terms}</Text>
+    </ScrollView>
+  );
+}
 <p align="center">
   <a href="https://expo.dev/">
     <img alt="Expo logo" height="128" src="./.github/resources/banner.png">
