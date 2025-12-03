@@ -34,7 +34,7 @@ const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
-import { View, Text, Button } from "react-native";
+import { View, Text, Button } from "expo";
 
 export default function HomeScreen({ navigation }) {
   return (
@@ -53,7 +53,7 @@ export default function HomeScreen({ navigation }) {
     </View>
   );
 }import { useState } from "react";
-import { View, Text, TextInput, Button } from "react-native";
+import { View, Text, TextInput, Button } from "expo";
 import { db } from "../services/firebase";
 import { addDoc, collection } from "firebase/firestore";
 
